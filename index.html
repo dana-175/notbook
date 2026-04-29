@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dana's AI Notebook</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --surface: #111827;
+    --surface2: #1a2234;
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --gold: #f59e0b;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --border: rgba(99,102,241,0.2);
+    --glow: rgba(99,102,241,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(245,158,11,0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    padding: 40px 0 32px;
+    animation: fadeIn 0.8s ease;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .logo-icon {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--accent), var(--gold));
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+  }
+
+  .logo-text {
+    font-size: 1.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent2), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    font-family: 'Tajawal', sans-serif;
+  }
+
+  /* LANG TOGGLE */
+  .lang-bar {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .lang-btn {
+    padding: 6px 18px;
+    border-radius: 50px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .lang-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 20px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: var(--surface);
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .upload-zone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glow);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .upload-zone:hover::before,
+  .upload-zone.dragover::before {
+    opacity: 1;
+  }
+
+  .upload-zone:hover,
+  .upload-zone.dragover {
+    border-color: var(--accent);
+  }
+
+  .upload-icon { font-size: 3rem; margin-bottom: 12px; }
+
+  .upload-zone h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    font-family: 'Tajawal', sans-serif;
+  }
+
+  .upload-zone p {
+    color: var(--muted);
+    font-size: 0.87rem;
+    font-family: 'Tajawal', sans-serif;
+  }
+
+  #fileInput { display: none; }
+
+  /* FILE PREVIEW */
+  .file-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin-bottom: 24px;
+    font-size: 0.88rem;
+    font-family: 'Tajawal', sans-serif;
+    color: var(--accent2);
+    animation: slideIn 0.3s ease;
+  }
+
+  .file-chip .remove {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 1rem;
+    transition: color 0.2s;
+  }
+
+  .file-chip .remove:hover { color: #ef4444; }
+
+  /* ACTIONS */
+  .section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .action-btn {
+    padding: 14px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Tajawal', sans-serif;
+    transition: all 0.2s;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .action-btn .icon { font-size: 1.4rem; }
+
+  .action-btn:hover {
+    border-color: var(--accent);
+    background: var(--glow);
+    transform: translateY(-2px);
+  }
+
+  .action-btn.selected {
+    border-color: var(--accent);
+    background: rgba(99,102,241,0.15);
+    color: var(--accent2);
+  }
+
+  /* CUSTOM PROMPT */
+  .prompt-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+  }
+
+  .prompt-area textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: 'Tajawal', sans-serif;
+    resize: none;
+    min-height: 60px;
+    line-height: 1.6;
+  }
+
+  .prompt-area textarea::placeholder { color: var(--muted); }
+
+  .send-btn {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: var(--accent);
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .send-btn:hover { background: var(--accent2); transform: scale(1.05); }
+  .send-btn:disabled { background: var(--muted); cursor: not-allowed; transform: none; }
+
+  /* GENERATE BTN */
+  .generate-btn {
+    width: 100%;
+    padding: 18px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    border: none;
+    color: white;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    transition: all 0.3s;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .generate-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s;
+  }
+
+  .generate-btn:hover::before { left: 100%; }
+  .generate-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(99,102,241,0.4); }
+  .generate-btn:disabled { background: var(--muted); cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* RESULT */
+  .result-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 20px;
+    animation: fadeIn 0.5s ease;
+    display: none;
+  }
+
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .result-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent2);
+    font-family: 'Tajawal', sans-serif;
+  }
+
+  .download-btns {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .dl-btn {
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Tajawal', sans-serif;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dl-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .result-content {
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* LOADING */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 40px;
+    font-family: 'Tajawal', sans-serif;
+    color: var(--muted);
+  }
+
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+
+  /* SLIDES PREVIEW */
+  .slides-container {
+    display: none;
+    gap: 12px;
+    flex-direction: column;
+    margin-top: 16px;
+  }
+
+  .slide {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    border-right: 4px solid var(--accent);
+  }
+
+  .slide-num {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .slide-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-family: 'Tajawal', sans-serif;
+  }
+
+  .slide-body {
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) {
+    .actions-grid { grid-template-columns: repeat(2, 1fr); }
+    header { padding: 24px 0 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">✦</div>
+      <span class="logo-text">Dana's AI Notebook</span>
+    </div>
+    <p id="subtitle">ارفعي ملفك واختاري ما تريدين فعله به</p>
+  </header>
+
+  <div class="lang-bar">
+    <button class="lang-btn active" onclick="setLang('ar')">العربية</button>
+    <button class="lang-btn" onclick="setLang('en')">English</button>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <div class="upload-icon">📄</div>
+    <h3 id="uploadTitle">اسحبي ملفك هنا أو اضغطي للرفع</h3>
+    <p id="uploadSub">يدعم PDF، Word، TXT، صور</p>
+  </div>
+  <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg">
+
+  <div id="fileChip" style="display:none">
+    <div class="file-chip">
+      <span>📎</span>
+      <span id="fileName"></span>
+      <span class="remove" onclick="removeFile()">✕</span>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="section-title" id="actionsLabel">اختاري ما تريدين</div>
+  <div class="actions-grid">
+    <button class="action-btn" onclick="selectAction(this, 'summary')" id="btn-summary">
+      <span class="icon">📝</span>
+      <span id="lbl-summary">ملخص سريع</span>
+    </button>
+    <button class="action-btn" onclick="selectAction(this, 'slides')" id="btn-slides">
+      <span class="icon">🎯</span>
+      <span id="lbl-slides">شرائح عرض</span>
+    </button>
+    <button class="action-btn" onclick="selectAction(this, 'notes')" id="btn-notes">
+      <span class="icon">📚</span>
+      <span id="lbl-notes">ملاحظات دراسية</span>
+    </button>
+    <button class="action-btn" onclick="selectAction(this, 'quiz')" id="btn-quiz">
+      <span class="icon">❓</span>
+      <span id="lbl-quiz">أسئلة مراجعة</span>
+    </button>
+    <button class="action-btn" onclick="selectAction(this, 'explain')" id="btn-explain">
+      <span class="icon">💡</span>
+      <span id="lbl-explain">اشرح لي</span>
+    </button>
+    <button class="action-btn" onclick="selectAction(this, 'translate')" id="btn-translate">
+      <span class="icon">🌐</span>
+      <span id="lbl-translate">ترجمة</span>
+    </button>
+  </div>
+
+  <!-- CUSTOM PROMPT -->
+  <div class="prompt-area">
+    <textarea id="customPrompt" placeholder="أو اكتبي طلبك هنا..." rows="2"></textarea>
+    <button class="send-btn" onclick="generate()" id="generateBtn" disabled>▶</button>
+  </div>
+
+  <button class="generate-btn" onclick="generate()" id="mainGenerateBtn" disabled>
+    ✦ &nbsp;<span id="generateLabel">توليد</span>
+  </button>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p id="loadingText">جارٍ التحليل...</p>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-box" id="resultBox">
+    <div class="result-header">
+      <div class="result-title" id="resultTitle">النتيجة</div>
+      <div class="download-btns">
+        <button class="dl-btn" onclick="downloadTxt()">⬇ TXT</button>
+        <button class="dl-btn" onclick="downloadHtml()">⬇ HTML</button>
+        <button class="dl-btn" id="dlSlides" onclick="downloadSlides()" style="display:none">⬇ شرائح HTML</button>
+      </div>
+    </div>
+    <div class="result-content" id="resultContent"></div>
+    <div class="slides-container" id="slidesContainer"></div>
+  </div>
+</div>
+
+<script>
+let currentLang = 'ar';
+let selectedAction = '';
+let fileContent = '';
+let fileBase64 = '';
+let fileType = '';
+let lastResult = '';
+let lastSlides = [];
+
+const labels = {
+  ar: {
+    subtitle: 'ارفعي ملفك واختاري ما تريدين فعله به',
+    uploadTitle: 'اسحبي ملفك هنا أو اضغطي للرفع',
+    uploadSub: 'يدعم PDF، Word، TXT، صور',
+    actionsLabel: 'اختاري ما تريدين',
+    summary: 'ملخص سريع', slides: 'شرائح عرض',
+    notes: 'ملاحظات دراسية', quiz: 'أسئلة مراجعة',
+    explain: 'اشرح لي', translate: 'ترجمة',
+    generateLabel: 'توليد', loadingText: 'جارٍ التحليل...',
+    customPlaceholder: 'أو اكتبي طلبك هنا...',
+    resultTitle: 'النتيجة',
+  },
+  en: {
+    subtitle: 'Upload your file and choose what to do with it',
+    uploadTitle: 'Drag your file here or click to upload',
+    uploadSub: 'Supports PDF, Word, TXT, images',
+    actionsLabel: 'Choose an action',
+    summary: 'Quick Summary', slides: 'Presentation Slides',
+    notes: 'Study Notes', quiz: 'Review Questions',
+    explain: 'Explain to me', translate: 'Translate',
+    generateLabel: 'Generate', loadingText: 'Analyzing...',
+    customPlaceholder: 'Or type your request here...',
+    resultTitle: 'Result',
+  }
+};
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const L = labels[lang];
+  document.getElementById('subtitle').textContent = L.subtitle;
+  document.getElementById('uploadTitle').textContent = L.uploadTitle;
+  document.getElementById('uploadSub').textContent = L.uploadSub;
+  document.getElementById('actionsLabel').textContent = L.actionsLabel;
+  document.getElementById('lbl-summary').textContent = L.summary;
+  document.getElementById('lbl-slides').textContent = L.slides;
+  document.getElementById('lbl-notes').textContent = L.notes;
+  document.getElementById('lbl-quiz').textContent = L.quiz;
+  document.getElementById('lbl-explain').textContent = L.explain;
+  document.getElementById('lbl-translate').textContent = L.translate;
+  document.getElementById('generateLabel').textContent = L.generateLabel;
+  document.getElementById('customPrompt').placeholder = L.customPlaceholder;
+  document.getElementById('resultTitle').textContent = L.resultTitle;
+  document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+}
+
+// Drag & drop
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+  fileType = file.type;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileChip').style.display = 'block';
+  checkReady();
+
+  const reader = new FileReader();
+  if (file.type.startsWith('image/')) {
+    reader.onload = ev => {
+      fileBase64 = ev.target.result.split(',')[1];
+      fileContent = '[image file]';
+    };
+    reader.readAsDataURL(file);
+  } else {
+    reader.onload = ev => {
+      fileContent = ev.target.result;
+      fileBase64 = '';
+    };
+    reader.readAsText(file);
+  }
+}
+
+function removeFile() {
+  fileContent = ''; fileBase64 = ''; fileType = '';
+  document.getElementById('fileChip').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  checkReady();
+}
+
+function selectAction(btn, action) {
+  document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedAction = action;
+  checkReady();
+}
+
+function checkReady() {
+  const hasFile = fileContent !== '' || fileBase64 !== '';
+  const hasAction = selectedAction !== '' || document.getElementById('customPrompt').value.trim() !== '';
+  const ready = hasFile && hasAction;
+  document.getElementById('generateBtn').disabled = !ready;
+  document.getElementById('mainGenerateBtn').disabled = !ready;
+}
+
+document.getElementById('customPrompt').addEventListener('input', checkReady);
+
+function buildPrompt() {
+  const L = labels[currentLang];
+  const customText = document.getElementById('customPrompt').value.trim();
+  const lang = currentLang === 'ar' ? 'Arabic' : 'English';
+
+  if (customText) return `${customText}\n\nRespond in ${lang}.`;
+
+  const prompts = {
+    summary: `Provide a clear, concise summary of this document. Use bullet points for key ideas. Respond in ${lang}.`,
+    slides: `Create presentation slides for this document. Format as JSON array: [{"title":"...","content":"..."}]. Make 5-8 slides. Respond in ${lang}. Return ONLY the JSON array, nothing else.`,
+    notes: `Create comprehensive study notes from this document. Use headings, bullet points, and highlight key terms. Respond in ${lang}.`,
+    quiz: `Create 5 review questions with answers based on this document. Format clearly. Respond in ${lang}.`,
+    explain: `Explain the main concepts in this document in simple, easy-to-understand language. Respond in ${lang}.`,
+    translate: currentLang === 'ar' ? `Translate this document to English.` : `ترجم هذا المستند إلى العربية.`,
+  };
+  return prompts[selectedAction] || `Analyze this document and provide insights. Respond in ${lang}.`;
+}
+
+async function generate() {
+  const hasFile = fileContent !== '' || fileBase64 !== '';
+  if (!hasFile) return;
+
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('resultBox').style.display = 'none';
+  document.getElementById('mainGenerateBtn').disabled = true;
+
+  const prompt = buildPrompt();
+  let messages;
+
+  if (fileBase64) {
+    messages = [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: fileType, data: fileBase64 } },
+        { type: 'text', text: prompt }
+      ]
+    }];
+  } else {
+    messages = [{
+      role: 'user',
+      content: `Here is the document content:\n\n${fileContent.substring(0, 8000)}\n\n${prompt}`
+    }];
+  }
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content?.map(i => i.text || '').join('') || 'No response received.';
+    lastResult = text;
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('resultBox').style.display = 'block';
+    document.getElementById('slidesContainer').style.display = 'none';
+    document.getElementById('dlSlides').style.display = 'none';
+    document.getElementById('resultContent').style.display = 'block';
+
+    if (selectedAction === 'slides') {
+      try {
+        const clean = text.replace(/```json|```/g, '').trim();
+        lastSlides = JSON.parse(clean);
+        renderSlides(lastSlides);
+        document.getElementById('resultContent').style.display = 'none';
+        document.getElementById('dlSlides').style.display = 'flex';
+      } catch {
+        document.getElementById('resultContent').textContent = text;
+      }
+    } else {
+      document.getElementById('resultContent').textContent = text;
+    }
+
+    document.getElementById('mainGenerateBtn').disabled = false;
+
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('resultBox').style.display = 'block';
+    document.getElementById('resultContent').textContent = 'Error: ' + err.message;
+    document.getElementById('mainGenerateBtn').disabled = false;
+  }
+}
+
+function renderSlides(slides) {
+  const container = document.getElementById('slidesContainer');
+  container.innerHTML = '';
+  container.style.display = 'flex';
+  slides.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'slide';
+    div.innerHTML = `<div class="slide-num">Slide ${i + 1}</div>
+      <div class="slide-title">${s.title || ''}</div>
+      <div class="slide-body">${(s.content || '').replace(/\n/g, '<br>')}</div>`;
+    container.appendChild(div);
+  });
+}
+
+function downloadTxt() {
+  const blob = new Blob([lastResult], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'result.txt';
+  a.click();
+}
+
+function downloadHtml() {
+  const html = `<!DOCTYPE html><html dir="${currentLang === 'ar' ? 'rtl' : 'ltr'}">
+<head><meta charset="UTF-8"><style>
+body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;line-height:1.8;color:#1a202c;}
+h1{color:#4f46e5;border-bottom:2px solid #4f46e5;padding-bottom:10px;}
+</style></head>
+<body><h1>Dana's AI Notebook — Result</h1><pre style="white-space:pre-wrap">${lastResult}</pre></body></html>`;
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'result.html';
+  a.click();
+}
+
+function downloadSlides() {
+  if (!lastSlides.length) return;
+  const slidesHtml = lastSlides.map((s, i) => `
+    <div class="slide">
+      <div class="num">Slide ${i + 1} / ${lastSlides.length}</div>
+      <h2>${s.title || ''}</h2>
+      <div class="content">${(s.content || '').replace(/\n/g, '<br>')}</div>
+    </div>`).join('');
+
+  const html = `<!DOCTYPE html><html dir="${currentLang === 'ar' ? 'rtl' : 'ltr'}">
+<head><meta charset="UTF-8"><title>Slides</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:#0a0f1e;color:white;padding:40px 20px;}
+h1{text-align:center;color:#818cf8;margin-bottom:40px;font-size:1.5rem;}
+.slide{background:#1a2234;border:1px solid rgba(99,102,241,0.3);border-right:4px solid #6366f1;border-radius:16px;padding:32px;margin-bottom:20px;max-width:800px;margin-inline:auto;}
+.num{font-size:0.75rem;color:#6366f1;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+h2{font-size:1.3rem;margin-bottom:14px;color:#f1f5f9;}
+.content{color:#94a3b8;line-height:1.8;font-size:0.97rem;}
+</style></head>
+<body>
+<h1>✦ Presentation Slides</h1>
+${slidesHtml}
+</body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'slides.html';
+  a.click();
+}
+</script>
+</body>
+</html>
